@@ -15,16 +15,13 @@ struct RoutingMessage {
     // Anything else you need
 
     #if defined(LINKSTATE)
-    RoutingMessage(int latency, int age, int source, int destination)
+    RoutingMessage(int lat, int ag, int src, int dst);
     int age;
     int source;
     int destination;
     int latency;
     #endif 
     
-    
-    
-    #endif
     #if defined(DISTANCEVECTOR)
     #endif
 };

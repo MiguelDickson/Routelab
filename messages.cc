@@ -27,11 +27,11 @@ ostream &RoutingMessage::Print(ostream &os) const
     return os;
 }
 
-RoutingMessage::RoutingMessage(int latency, int age, int source, int destination) {
-    this.latency = latency;
-    this.age = age;
-    this.source = source;
-    this.destination = destination;
+RoutingMessage::RoutingMessage(int lat, int ag, int src, int dst) {
+    latency = lat;
+    age = ag;
+    source = src;
+    destination = dst;
 
 }
 

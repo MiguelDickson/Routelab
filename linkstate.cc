@@ -1,4 +1,8 @@
 #include "linkstate.h"
+#include "context.h"
+#include <map>
+#include <set>
+
 
 LinkState::LinkState(unsigned n, SimulationContext* c, double b, double l) :
     Node(n, c, b, l)
@@ -24,23 +28,26 @@ void LinkState::LinkHasBeenUpdated(Link* l) {
     
     int lat = l->GetLatency();
     int src = l->GetSrc();
-    int dest = l->GetDst();
+    int dest = l->GetDest();
        
     this->routing_table.topo[src][dest].cost = lat;
-    this->routing_table.topo[src][dest].age = this->routing_table.top[src][dest].age + 1;
-    SendToNeighbors(new RoutingMessage(lat, this->routing_table.top[src][dest].age, src, dest));
+    this->routing_table.topo[src][dest].age = this->routing_table.topo[src][dest].age + 1;
+    SendToNeighbors(new RoutingMessage(lat, this->routing_table.topo[src][dest].age, src, dest));
 }
 
 void LinkState::ProcessIncomingRoutingMessage(RoutingMessage *m) {
     cerr << *this << " got a routing message: " << *m << " (ignored)" << endl;
     
-    /
     int lat = m->latency;
     int age = m->age;
+    int src = m->source;
+    int dest = m->destination;
     
     //Check whether it's new (no entry exists) OR whether it's newer
     if (routing_table.topo[src][dest].age == -1 || (routing_table.topo[src][dest].age > -1 && routing_table.topo[src][dest].age < age))
     {
+    routing_table.topo[src][dest].age = age;
+    routing_table.topo[src][dest].cost = lat;
     SendToNeighbors(m);
     }
 }
@@ -71,8 +78,8 @@ Node* LinkState::GetNextHop(Node *destination) {
     //Initialiation:
           
     //First, need a pair of queues to hold nodes to potentially visit, and visited nodes
-    set <int> nodes;
-    set <int> visited;
+    set<int> nodes;
+    set<int> visited;
     
     //Also need a map to hold the distances once found, a map to keep track of the paths, and a temp to get hold the vectors from topo 
     //The latter map will be searched recursively by previous node until reaching this node to reconstruct the path
@@ -90,29 +97,29 @@ Node* LinkState::GetNextHop(Node *destination) {
     //Set this node's previous to itself
     prev_paths[0] = 0;
     
-    //Set other distances to +INF. Set the previous paths to -(INT_MAX). 
-    for (int i=1; i<this.routing_table.topo.size(); i++)
+    //Set other distances to +INF. Set the previous paths to -(99999). 
+    for (int i=1; i<routing_table.topo.size(); i++)
     {
-        distances[i] = INT_MAX;
-        prev_paths[i] = -(INT_MAX);
+        distances[i] = 99999;
+        prev_paths[i] = -(99999);
     }
     
     //Start with this node 
-    temp = this.routing_table.topo[this.number];
-    visited.insert(this.number);
+    temp = routing_table.topo[number];
+    visited.insert(number);
     
     //Iterate through this node's neighbors
-    for (temp_it = temp.begin(); temp_it != temp.end(); temp++)
+    for (temp_it = temp.begin(); temp_it != temp.end(); temp_it++)
     {
         //Iterator will return the key_value pair. Check whether the key is visited
         if (visited.count(temp_it->first) < 1)
         {
         int v = temp_it->first; //Get the key (i.e. node number)
             //D(v) = min( D(w) + c(w,v) , D(v) )
-            if ( (distances[this.number] + this.distances[this.number][v].cost) < distances[v])
+            if ( (distances[number] + routing_table.topo[number][v].cost) < distances[v])
             {
-                distances[v] = (distances[this.number] + this.distances[this.number][v].cost);
-                prev_paths[v] = this.number;
+                distances[v] = (distances[number] + routing_table.topo[number][v].cost);
+                prev_paths[v] = number;
                 //Add this neighbor to our queue
                 nodes.insert(v);
             }
@@ -129,19 +136,19 @@ Node* LinkState::GetNextHop(Node *destination) {
             int x = getCurrentSmallest(nodes, visited, distances);
             nodes.erase(x);
             visited.insert(x);
-            temp = this.routing_table.topo[x];
+            temp = routing_table.topo[x];
             //Repeat the loop that we ran in the initialization step basically
-               for (temp_it = temp.begin(); temp_it != temp.end(); temp++)
+               for (temp_it = temp.begin(); temp_it != temp.end(); temp_it++)
                 {
                     //Iterator will return the key_value pair. Check the key is visited
                     if (visited.count(temp_it->first) < 1)
                     {
                     int v = temp_it->first; //Get the key (i.e. node number)
                         //D(v) = min( D(w) + c(w,v) , D(v) )
-                        if ( (distances[this.number] + this.distances[this.number][v].cost) < distances[v])
+                        if ( (distances[number] + routing_table.topo[number][v].cost) < distances[v])
                         {
-                            distances[v] = (distances[this.number] + this.distances[this.number][v].cost);
-                            prev_paths[v] = this.number;
+                            distances[v] = (distances[number] + routing_table.topo[number][v].cost);
+                            prev_paths[v] = number;
                             //Add this neighbor to our queue
                             nodes.insert(v);
                         }
@@ -155,16 +162,17 @@ Node* LinkState::GetNextHop(Node *destination) {
         //Djikstra's is done. Distances should hold the distances from this node. Now need to recursively go through previous to figure out proper routing.
         //Make a new copy of local_map
         map<int, int> new_map;
-        new_map = make_map(prev_paths);
-        this.routing_table.local_map = new_map;
+        new_map = make_map(prev_paths, number);
+        routing_table.local_map = new_map;
+        int y= destination->GetNumber();
         
-        Node* target = new Node(new_map[destination->number], NULL, 0, 0);
+        Node* target = new Node(new_map[y], NULL, 0, 0);
         Node* result = context->FindMatchingNode(const_cast<Node *>(target));
         return result;        
 }
 
 
-map<int, int> make_map (map<int,int> prevpaths)
+map<int, int> LinkState::make_map(map<int,int> prevpaths, int node_number)
 {
     map<int, int> result;
     map<int, int>::const_iterator prevpaths_it;
@@ -178,13 +186,13 @@ map<int, int> make_map (map<int,int> prevpaths)
        //The value is the last previous node calculated during Djikstra's
        old_previous = prevpaths_it->second;
      
-       if (old_previous == this.number)
+       if (old_previous == node_number)
        result[destination_node] = destination_node; //Directly routing there is fastest
        
        else
        {
             current_previous = prevpaths[old_previous];
-            while (current_previous != this.number)
+            while (current_previous != node_number)
             {
             old_previous = current_previous;
             current_previous = prevpaths[current_previous];            
@@ -194,15 +202,15 @@ map<int, int> make_map (map<int,int> prevpaths)
     
     }
 
-
+    return result;
 }
 
-int getCurrentSmallest(set<int> visited, set<int> nodes, map<int,int> distances)
+int LinkState::getCurrentSmallest(set<int> visited, set<int> nodes, map<int,int> distances)
 {
-    int min_dist = INT_MAX;
-    for (int i=0; i< this.routing_table.topo.size(); i++)
-    {
-        int min_node = -1;
+    int min_dist = 99999;
+    int min_node = -1;
+    for (int i=0; i< routing_table.topo.size(); i++)
+    {        
         set<int>::const_iterator nodes_it;    
         set<int>::const_iterator visit_it;
         nodes_it = nodes.find(i);      
@@ -224,7 +232,7 @@ int getCurrentSmallest(set<int> visited, set<int> nodes, map<int,int> distances)
         }
     
     }
-    if (min_dist == INT_MAX) 
+    if (min_dist == 99999) 
         return -1; //An error has occurred; this shouldn't happen
     else
         return min_node;
@@ -232,7 +240,7 @@ int getCurrentSmallest(set<int> visited, set<int> nodes, map<int,int> distances)
 
 
 Table* LinkState::GetRoutingTable() {
-    Table *copytable = new Table(this.routing_table);
+    Table *copytable = new Table(routing_table);
    return copytable;
 }
 

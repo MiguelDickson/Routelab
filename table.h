@@ -26,8 +26,7 @@ struct TopoLink {
 
 // Students should write this class
 class Table {
-    private:
-       // map < int, map < int, TopoLink > > topo;
+ 
     public:
         Table();
         Table(const Table &);

@@ -2,6 +2,7 @@
 #define _linkstate
 
 #include "node.h"
+#include <set>
 
 class LinkState: public Node {
     private:
@@ -22,6 +23,8 @@ class LinkState: public Node {
         ostream & Print(ostream & os) const;
 
         // Anything else
+        map<int, int> make_map(map<int,int> prevpaths, int node_number);
+        int getCurrentSmallest(set<int> visited, set<int> nodes, map<int,int> distances);
 };
 
 inline ostream & operator<<(ostream & os, const LinkState & n) {
