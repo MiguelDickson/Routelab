@@ -41,7 +41,7 @@ class Table {
 
         #if defined(LINKSTATE)
         
-        map<int, int> local_map
+        map<int, int> local_map;
         
         #endif
 
