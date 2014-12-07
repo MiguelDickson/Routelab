@@ -1,4 +1,5 @@
 #include "distancevector.h"
+#include "table.h"
 
 DistanceVector::DistanceVector(unsigned n, SimulationContext* c, double b, double l) :
     Node(n, c, b, l)
