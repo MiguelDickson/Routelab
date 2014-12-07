@@ -23,6 +23,9 @@ struct RoutingMessage {
     #endif 
     
     #if defined(DISTANCEVECTOR)
+	RoutingMessage(int, my_map);
+	my_map updated_dv_table;
+	int source_node;
     #endif
 };
 

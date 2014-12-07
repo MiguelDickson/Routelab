@@ -39,6 +39,13 @@ RoutingMessage::RoutingMessage(int lat, int ag, int src, int dst) {
 #endif
 
 #if defined(DISTANCEVECTOR)
+
+RoutingMessage::RoutingMessage(int node, my_map dv)
+{
+    source_node = node;
+    updated_dv_table = dv;
+}
+
 ostream &RoutingMessage::Print(ostream &os) const
 {
     os << "DistanceVector RoutingMessage()";

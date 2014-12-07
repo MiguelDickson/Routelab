@@ -2,11 +2,13 @@
 #define _distancevector
 
 #include "node.h"
+#include "context.h"
+#include <limits>
 
 class DistanceVector: public Node {
     private:
         // Anything you need in addition to Node members
-
+		
     public:
         DistanceVector(unsigned, SimulationContext* , double, double);
         DistanceVector(const DistanceVector &);
@@ -16,12 +18,14 @@ class DistanceVector: public Node {
         // Inherited from Node
         void LinkHasBeenUpdated(Link *l);
         void ProcessIncomingRoutingMessage(RoutingMessage *m);
+		bool UpdateNodeDV();
         void TimeOut();
         Node* GetNextHop(Node* destination);
         Table* GetRoutingTable();
         ostream & Print(ostream & os) const;
 
         // Anything else
+		//Table table;
 };
 
 inline ostream & operator<<(ostream & os, const DistanceVector & n) {

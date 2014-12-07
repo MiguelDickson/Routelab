@@ -24,6 +24,9 @@ struct TopoLink {
     int age;
 };
 
+typedef std::map<int, TopoLink> my_map;
+typedef std::map <int, my_map> my_topo;
+
 // Students should write this class
 class Table {
  
@@ -45,6 +48,13 @@ class Table {
         #endif
 
         #if defined(DISTANCEVECTOR)
+		
+		void UpdateSingleLink(int, int, int);
+		
+		my_map routing_table;
+		my_map neighbor_table;
+		map <int, int> hops_map;
+		
         #endif
 };
 
